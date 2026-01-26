@@ -44,18 +44,18 @@ def dh_key_exchange():
     print("Alice IV:", iv_alice.hex())
     cAlice = AES.new(k_alice, AES.MODE_CBC, iv_alice)
     c0 = cAlice.encrypt(pad(m0, 16))
-    ctAlice = AES.new(k_alice, AES.MODE_CBC, iv_alice)
+    ctBob = AES.new(k_bob, AES.MODE_CBC, iv_alice)
     print("Alice ciphertext:", c0.hex())
-    print("Bob's decrypted text:", unpad(ctAlice.decrypt(c0), 16))
+    print("Bob's decrypted text:", unpad(ctBob.decrypt(c0), 16))
 
     m1 = b"Hi Alice!"
     print("Bob message", m1)
     print("Bob IV:", iv_bob.hex())
     cBob = AES.new(k_bob, AES.MODE_CBC, iv_bob)
     c1 = cBob.encrypt(pad(m1, 16))
-    ctBob = AES.new(k_bob, AES.MODE_CBC, iv_bob)
+    ctAlice = AES.new(k_alice, AES.MODE_CBC, iv_bob)
     print("Bob ciphertext:", c1.hex())
-    print("Alice's decrypted text:", unpad(ctBob.decrypt(c1), 16))
+    print("Alice's decrypted text:", unpad(ctAlice.decrypt(c1), 16))
 
 if __name__ == "__main__":
     dh_key_exchange()
