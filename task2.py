@@ -20,41 +20,55 @@ def dh_key_exchange():
     YB = pow(a, XBkey, q)
     print("Bob Public Key (YB):", YB)
 
-    s1 = pow(YB, XAkey, q)
+    # mallory intercepts here
+    YA_modified = q
+    print("Modified YA(sent to Bob):", YA_modified)
+    YB_modified = q
+    print("Modified YB(sent to Alice):", YB_modified)
+
+    s1 = pow(YB_modified, XAkey, q)
     print("Alice's computed shared secret:", s1)
-    s2 = pow(YA, XBkey, q)
+    s2 = pow(YA_modified, XBkey, q)
     print("Bob's computed shared secret:", s2)
-    print("Alice and Bob have same key:", s1 == s2)
+    sm = 0
 
     k_al = SHA256.new()
     k_b = SHA256.new()
+    k_m = SHA256.new()
     k_al.update(s1.to_bytes((s1.bit_length() + 7) // 8, 'big'))
     k_b.update(s2.to_bytes((s2.bit_length() + 7) // 8, 'big'))
+    k_m.update(sm.to_bytes((sm.bit_length() + 7) // 8, 'big'))
 
     k_alice = k_al.digest()[:16]
     k_bob = k_b.digest()[:16]
+    k_mallory = k_m.digest()[:16]
 
     print("Alice derived key: ", k_alice.hex())
     print("Bob derived key: ", k_bob.hex())
-    print("Alice and Bob have same key:", k_bob == k_alice)
+    print("Mallory derived key: ", k_mallory.hex())
+    print("Mallory determines the shared secret(s):", sm)
+    print("All parties have the same key:", k_bob == k_alice == k_mallory)
+
+    ctMalloryForAlice = AES.new(k_mallory, AES.MODE_CBC, iv)
 
     m0 = b"Hi Bob!"
     print("Alice message", m0)
     print("Alice IV:", iv.hex())
     cAlice = AES.new(k_alice, AES.MODE_CBC, iv)
     c0 = cAlice.encrypt(pad(m0, 16))
-    ctAlice = AES.new(k_alice, AES.MODE_CBC, iv)
     print("Alice ciphertext:", c0.hex())
-    print("Bob's decrypted text:", unpad(ctAlice.decrypt(c0), 16))
+    print("Mallory decrypts c0:", unpad(ctMalloryForAlice.decrypt(c0), 16))
+
+
+    ctMalloryForBob = AES.new(k_mallory, AES.MODE_CBC, iv)
 
     m1 = b"Hi Alice!"
     print("Bob message", m1)
     print("Bob IV:", iv.hex())
     cBob = AES.new(k_bob, AES.MODE_CBC, iv)
     c1 = cBob.encrypt(pad(m1, 16))
-    ctBob = AES.new(k_bob, AES.MODE_CBC, iv)
     print("Bob ciphertext:", c1.hex())
-    print("Alice's decrypted text:", unpad(ctBob.decrypt(c1), 16))
+    print("Mallory decrypts c1:", unpad(ctMalloryForBob.decrypt(c1), 16))
 
 if __name__ == "__main__":
     dh_key_exchange()
