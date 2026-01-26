@@ -6,7 +6,8 @@ from Crypto.Util.Padding import pad, unpad
 
 q = int("B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C69A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C013ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD7098488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708DF1FB2BC2E4A4371", 16)
 a = int("A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507FD6406CFF14266D31266FEA1E5C41564B777E690F5504F213160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28AD662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24855E6EEB22B3B2E5", 16)
-iv = get_random_bytes(16)
+iv_alice = get_random_bytes(16)
+iv_bob = get_random_bytes(16)
 
 def dh_key_exchange():
 
@@ -40,19 +41,19 @@ def dh_key_exchange():
 
     m0 = b"Hi Bob!"
     print("Alice message", m0)
-    print("Alice IV:", iv.hex())
-    cAlice = AES.new(k_alice, AES.MODE_CBC, iv)
+    print("Alice IV:", iv_alice.hex())
+    cAlice = AES.new(k_alice, AES.MODE_CBC, iv_alice)
     c0 = cAlice.encrypt(pad(m0, 16))
-    ctAlice = AES.new(k_alice, AES.MODE_CBC, iv)
+    ctAlice = AES.new(k_alice, AES.MODE_CBC, iv_alice)
     print("Alice ciphertext:", c0.hex())
     print("Bob's decrypted text:", unpad(ctAlice.decrypt(c0), 16))
 
     m1 = b"Hi Alice!"
     print("Bob message", m1)
-    print("Bob IV:", iv.hex())
-    cBob = AES.new(k_bob, AES.MODE_CBC, iv)
+    print("Bob IV:", iv_bob.hex())
+    cBob = AES.new(k_bob, AES.MODE_CBC, iv_bob)
     c1 = cBob.encrypt(pad(m1, 16))
-    ctBob = AES.new(k_bob, AES.MODE_CBC, iv)
+    ctBob = AES.new(k_bob, AES.MODE_CBC, iv_bob)
     print("Bob ciphertext:", c1.hex())
     print("Alice's decrypted text:", unpad(ctBob.decrypt(c1), 16))
 

@@ -5,7 +5,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
 q = int("B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C69A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C013ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD7098488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708DF1FB2BC2E4A4371", 16)
-a = int("A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507FD6406CFF14266D31266FEA1E5C41564B777E690F5504F213160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28AD662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24855E6EEB22B3B2E5", 16)
+a = q - 1 # or 1 or q
 iv = get_random_bytes(16)
 
 def dh_key_exchange():
@@ -20,17 +20,23 @@ def dh_key_exchange():
     YB = pow(a, XBkey, q)
     print("Bob Public Key (YB):", YB)
 
-    # mallory intercepts here
-    YA_modified = q
-    print("Modified YA(sent to Bob):", YA_modified)
-    YB_modified = q
-    print("Modified YB(sent to Alice):", YB_modified)
-
-    s1 = pow(YB_modified, XAkey, q)
+    s1 = pow(YB, XAkey, q)
     print("Alice's computed shared secret:", s1)
-    s2 = pow(YA_modified, XBkey, q)
+    s2 = pow(YA, XBkey, q)
     print("Bob's computed shared secret:", s2)
-    sm = 0
+    sm: int
+    if a == 1:
+        print("Case: alpha =", a)
+        print("Mallory knows the shared secret is always 1")
+        sm = 1
+    elif a == q:
+        print("Case: alpha = q")
+        print("Mallory knows the shared secret is always 0")
+        sm = 0
+    elif a == q-1:
+        print("Case: alpha = q-1")
+        print("Mallory knows the shared secret is either 1 or q - 1")
+        sm = (q-1) if (YA == YB == (q-1)) else 1
 
     k_al = SHA256.new()
     k_b = SHA256.new()
