@@ -51,7 +51,14 @@ def encrypt(m, e, n):
 def decrypt(c, d, n):
     return pow(c, d, n)
 
-if __name__ == "__main__":
+def signature(m, d, n):
+    return pow(m, d, n)
+
+def verify(m, s, n, e):
+    return pow(s, e, n) == m
+
+def task1():
+    print("RUNNING TASK 1")
     n, e, d = rsa_key_generator()
 
     message = "Hi bob"
@@ -64,19 +71,20 @@ if __name__ == "__main__":
     m_decrypted = decrypt(c, d, n)
     message = int_to_str(m_decrypted)
     print("Decrypted:", message)
+    print("TASK 1 DONE")
 
-    # part 2
+def task2_part_a():
+    print("RUNNING TASK 2 - PART A")
     n, e, d = rsa_key_generator()
     s = random.randrange(2, n)
     c = encrypt(s, e, n)
-    print ("og s:", s)
+    print("og s:", s)
     print("encrypted symmetric key:", c)
 
     # choose factor
     r = 2
     c_prime = (c * pow(r, e, n)) % n
     print("Mallory modified ciphertext:", c_prime)
-
 
     # Mallory sends c_prime instead to bob
     s_prime = decrypt(c_prime, d, n)
@@ -104,3 +112,38 @@ if __name__ == "__main__":
     cipher_mallory = AES.new(k_mallory, AES.MODE_CBC, iv)
     decrypted_mallory = unpad(cipher_mallory.decrypt(c0), 16)
     print("Mallory decrypted message:", decrypted_mallory)
+    print("TASK 2 PART A DONE")
+
+def task2_part_b():
+    print("RUNNING TASK 2 - PART B")
+    n, e, d = rsa_key_generator()
+
+    m1 = 12345
+    print("Orignal message 1:", m1)
+    m2 = 67890
+    print("Original message 2:", m2)
+
+    s1 = signature(m1, d, n)
+    print("Signature for m1:", s1)
+    s2 = signature(m2, d, n)
+    print("Signature for m2:", s2)
+
+    print("Verifying orignal signatures")
+    print("Signature 1 is valid:", verify(m1, s1, n, e))
+    print("Signature 2 is valid:", verify(m2, s2, n, e))
+
+    # mallory intercepts messages and signatures
+    m3 = (m1 * m2) % n
+    print("Mallory's new message m3:", m3)
+    s3 = (s1 * s2) % n
+    print("Mallory's forged signature for m3:", s3)
+
+    query =  verify(m3, s3, n, e)
+    print("Verifying message and signature\nSignature 3 is valid:", query)
+
+    if query:
+        print("Attack successful: Mallory created a valid signature for a new message!")
+    print("TASK 2 PART B DONE")
+
+if __name__ == "__main__":
+    task2_part_b()
