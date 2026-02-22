@@ -146,4 +146,6 @@ def task2_part_b():
     print("TASK 2 PART B DONE")
 
 if __name__ == "__main__":
+    task1()
+    task2_part_a()
     task2_part_b()
