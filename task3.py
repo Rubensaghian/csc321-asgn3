@@ -1,3 +1,7 @@
+from Crypto.Random import random, get_random_bytes
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Util.Padding import pad, unpad
 from Crypto.Util.number import getPrime
 
 e = 65537
@@ -61,3 +65,42 @@ if __name__ == "__main__":
     message = int_to_str(m_decrypted)
     print("Decrypted:", message)
 
+    # part 2
+    n, e, d = rsa_key_generator()
+    s = random.randrange(2, n)
+    c = encrypt(s, e, n)
+    print ("og s:", s)
+    print("encrypted symmetric key:", c)
+
+    # choose factor
+    r = 2
+    c_prime = (c * pow(r, e, n)) % n
+    print("Mallory modified ciphertext:", c_prime)
+
+
+    # Mallory sends c_prime instead to bob
+    s_prime = decrypt(c_prime, d, n)
+    print("Bobs decrypted value s':", s_prime)
+
+    # mallory deduces s from s_prime
+    r_inv = mod_inverse(r, n)
+    mallory_s = (s_prime * r_inv) % n
+    print("Mallory recovered symmetric key:", mallory_s)
+    if mallory_s == s:
+        print("Attack successful: Mallory recovered the original symmetric key!")
+
+    s_bytes = s.to_bytes(s.bit_length() + 7 // 8, 'big')
+    k = SHA256.new(s_bytes)
+    k = k.digest()
+    iv = get_random_bytes(16)
+    cipher = AES.new(k, AES.MODE_CBC, iv)
+    message = b"Secret message from Bob to Alice"
+    c0 = cipher.encrypt(pad(message, 16))
+    print("Bobs encrypted message:", c0.hex())
+
+    mallory_s_bytes = mallory_s.to_bytes(mallory_s.bit_length() + 7 // 8, 'big')
+    k_mallory = SHA256.new(mallory_s_bytes).digest()
+
+    cipher_mallory = AES.new(k_mallory, AES.MODE_CBC, iv)
+    decrypted_mallory = unpad(cipher_mallory.decrypt(c0), 16)
+    print("Mallory decrypted message:", decrypted_mallory)
